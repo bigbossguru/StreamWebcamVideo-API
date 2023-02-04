@@ -1,0 +1,26 @@
+[tool.black]
+line-length = 120
+exclude = '''
+(
+  /(
+    \.git
+    | \.mypy_cache
+    | \.pytest_cache
+    | \.venv
+    | \.vscode
+  )/
+)
+'''
+
+[tool.pylint.'MESSAGES CONTROL']
+max-line-length = 120
+disable = [
+  "no-member",
+  "bare-except",
+  "missing-timeout",
+  "missing-class-docstring",
+  "missing-module-docstring",
+  "missing-function-docstring",
+  "import-error",
+  "unused-import",
+]

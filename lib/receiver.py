@@ -14,17 +14,14 @@ class ClientReceiver(metaclass=Singleton):
         self.metadata = self._metadata()
 
     def display_video(self):
-        with requests.get(url=self.url, stream=True) as res:
-            res.raise_for_status()
-            for chunk in res.iter_content(chunk_size=self.metadata["chunk_size"] or 1024 * 1024):
-                try:
-                    frame = np.frombuffer(chunk, dtype=np.uint8).reshape(
-                        *self.metadata["screen_size"]
-                    )  # or 480, 640, 3)
-                except:
-                    _, frame = cv2.VideoCapture(self.url).read()
-                cv2.imshow("", frame)
-                cv2.waitKey(1)
+        for chunk in self._get_bytes():
+            try:
+                frame = np.frombuffer(chunk, dtype=np.uint8).reshape(*self.metadata["screen_size"])  # or 480, 640, 3)
+            except:
+                buffer = np.frombuffer(chunk[37:], dtype=np.uint8)
+                frame = cv2.imdecode(buffer, cv2.IMREAD_COLOR)
+            cv2.imshow("", frame)
+            cv2.waitKey(1)
 
     def record_video(self, video_name: str = "output"):
         ffmpeg_process = (
@@ -33,16 +30,21 @@ class ClientReceiver(metaclass=Singleton):
             .overwrite_output()
             .run_async(pipe_stdin=True)
         )
+
+        for chunk in self._get_bytes():
+            try:
+                ffmpeg_process.stdin.write(chunk)
+            except:
+                ffmpeg_process.stdin.close()
+                ffmpeg_process.wait()
+
+    def _get_bytes(self) -> Generator[bytes, None, None]:
         with requests.get(url=self.url, stream=True) as res:
             res.raise_for_status()
             for chunk in res.iter_content(chunk_size=self.metadata["chunk_size"] or 1024 * 1024):
-                try:
-                    ffmpeg_process.stdin.write(chunk)
-                except:
-                    ffmpeg_process.stdin.close()
-                    ffmpeg_process.wait()
+                yield chunk
 
-    def _metadata(self):
+    def _metadata(self) -> dict:
         try:
             res = requests.head(self.url)
             return dict(

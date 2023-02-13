@@ -8,7 +8,10 @@ from .singleton import Singleton
 class BaseWebCamera:
     def __init__(self, cam_id: int = 0) -> None:
         self.cam_id = cam_id
-        self.cam = cv2.VideoCapture(self.cam_id)
+        self.cam = cv2.VideoCapture(self.cam_id, cv2.CAP_V4L2)
+        self.cam.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc("M", "J", "P", "G"))
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 1920)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 1080)
         self.width = int(self.cam.get(3))
         self.height = int(self.cam.get(4))
         self.fps = int(self.cam.get(5))

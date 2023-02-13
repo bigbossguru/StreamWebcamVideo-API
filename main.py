@@ -4,7 +4,7 @@ from fastapi.responses import StreamingResponse
 
 from lib import camera
 
-MIMETYPE: str = "multipart/x-mixed-replace; boundary=frame"
+MEDIA_TYPE: str = "multipart/x-mixed-replace; boundary=frame"
 
 app = FastAPI()
 app.add_middleware(
@@ -17,6 +17,6 @@ app.add_middleware(
 
 
 @app.api_route("/", methods=["GET", "HEAD"])
-def raw():
-    stream = camera.WebCameraStream(cam_id="V4L2:/dev/video0")
-    return StreamingResponse(stream.stream_frame_bytes(), headers=stream.get_metadata(), media_type=MIMETYPE)
+def stream_webcam():
+    stream = camera.WebCameraStream()
+    return StreamingResponse(stream.stream_img_bytes(), headers=stream.get_metadata(), media_type=MEDIA_TYPE)
